@@ -1,0 +1,7 @@
+# only the two photos the page shows are published
+fotos/**/*.jpeg
+!fotos/cookie/cookie.jpeg
+!fotos/cacau/cacau.jpeg
+# old TRELLIS mesh, no longer used
+models/
+.DS_Store

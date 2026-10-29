@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#dedbd6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Cookie &amp; Cacau em 3D</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    :root { --ink: #2b2725; --muted: #6f6862; --paper: rgba(250, 248, 245, 0.86); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #dedbd6; color: var(--ink);
+      font: 15px/1.4 ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+    #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    header { position: fixed; top: calc(18px + env(safe-area-inset-top)); left: calc(22px + env(safe-area-inset-left)); right: 16px; pointer-events: none; }
+    h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+    header p { margin: 2px 0 0; color: var(--muted); }
+    #status { position: fixed; inset: 0; display: grid; place-items: center; font-size: 17px; color: var(--muted); pointer-events: none; }
+    nav { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 6px;
+      flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100vw - 20px);
+      padding: 6px; background: var(--paper); border-radius: 24px; box-shadow: 0 4px 18px rgba(0,0,0,.08);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transition: opacity .4s; }
+    button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .ready nav { opacity: 1; }
+    nav button { border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; font: inherit; color: var(--ink); cursor: pointer; white-space: nowrap; }
+    nav button.on { background: var(--ink); color: #fff; }
+    nav .sep { width: 1px; margin: 6px 4px; background: rgba(0,0,0,.15); }
+    #labels .tag { position: fixed; left: 0; top: 0; border: 0; padding: 4px 12px; border-radius: 999px;
+      background: var(--paper); font: 600 14px/1.3 inherit; font-family: inherit; color: var(--ink); cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    aside { position: fixed; top: calc(20px + env(safe-area-inset-top)); right: calc(20px + env(safe-area-inset-right)); display: flex; gap: 8px; }
+    aside figure { margin: 0; width: 74px; text-align: center; font-size: 12px; color: var(--muted); }
+    aside img { width: 74px; height: 98px; object-fit: cover; border-radius: 10px; display: block; margin-bottom: 3px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+    @media (max-width: 640px) {
+      aside { display: none; }
+      nav .sep { flex-basis: 100%; height: 0; margin: 0; } /* line break: places on top, modes below */
+      h1 { font-size: 21px; }
+      header p { font-size: 13px; }
+      nav { gap: 2px; padding: 5px; }
+      nav button { padding: 7px 11px; font-size: 14px; }
+    }
+    #refimg { display: none; }
+    .ref #refimg { display: block; position: fixed; left: 0; top: 0; width: 50%; height: 100%; object-fit: contain; background: #2a2725; }
+    .ref #scene { left: 50%; width: 50%; }
+    .ref aside, .ref nav, .ref #labels, .ref header p { display: none; }
+    .ref header { left: calc(50% + 20px); }
+    #gallery { display: none; }
+    .foto #gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; position: fixed;
+      inset: calc(92px + env(safe-area-inset-top)) 24px calc(88px + env(safe-area-inset-bottom)); }
+    #gallery figure[hidden] { display: none; }
+    .foto #scene, .foto #labels, .foto aside, .foto [data-focus], .foto [data-patas], .foto nav .sep { display: none; }
+    @media (max-width: 760px) { .foto [data-focus="Cookie"], .foto [data-focus="Cacau"] { display: inline-block; } }
+    #gallery figure { margin: 0; display: flex; flex-direction: column; min-height: 0; border-radius: 16px; overflow: hidden;
+      background: #1f2023; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+    #gallery iframe { flex: 1; width: 100%; border: 0; }
+    #gallery figcaption { padding: 10px 16px; color: #e8e4de; font-weight: 600; }
+    #gallery figcaption a { color: #b9b3ab; font-weight: 400; }
+    #gallery .empty { flex: 1; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px; text-align: center; color: #c9c3bb; }
+    #gallery .empty img { width: 120px; height: 160px; object-fit: cover; border-radius: 12px; opacity: .85; }
+    #gallery .empty p { max-width: 30ch; margin: 0; }
+    @media (max-width: 760px) { .foto #gallery { grid-template-columns: 1fr; inset: calc(86px + env(safe-area-inset-top)) 12px calc(76px + env(safe-area-inset-bottom)); } }
+  </style>
+</head>
+<body>
+  <img id="refimg" alt="Foto de referência" />
+  <canvas id="scene"></canvas>
+  <header>
+    <h1>Cookie &amp; Cacau</h1>
+    <p>Arraste para girar · toque numa delas para ela dar a patinha</p>
+  </header>
+  <aside>
+    <figure><img src="fotos/cookie/cookie.jpeg" alt="Foto da Cookie" />Cookie</figure>
+    <figure><img src="fotos/cacau/cacau.jpeg" alt="Foto da Cacau" />Cacau</figure>
+  </aside>
+  <div id="labels"></div>
+  <section id="gallery" aria-label="Modelos realistas"></section>
+  <div id="status">Carregando…</div>
+  <nav>
+    <button data-focus="all" class="on">As duas</button>
+    <button data-focus="Cookie">Cookie</button>
+    <button data-focus="Cacau">Cacau</button>
+    <button data-patas title="Câmera baixa nas patinhas">Patinhas</button>
+    <span class="sep"></span>
+    <button data-modo="foto" title="Modelos gerados por IA a partir das fotos">Foto 3D</button>
+    <button data-modo="codigo" title="Modelos feitos em código, com animação">Desenho</button>
+  </nav>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
